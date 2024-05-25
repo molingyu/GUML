@@ -18,6 +18,7 @@ public static class GumlRenderer
         _sController = controller;
         Guml.GlobalRefs.Add("$controller", _sController);
         var component = CreateComponent(_sGumlDoc.RootNode);
+        _sController.RootNode = component;
         RenderImports(controller, rootNode, component, dir);
         rootNode.AddChild(component);
     }
