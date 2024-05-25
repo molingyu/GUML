@@ -19,7 +19,7 @@ public partial class KeyConverter : IConverter
     public static string ToPascalCase(string str)
     {
         var text = MyRegex().Replace(str, match => match.Groups["char"].Value.ToUpperInvariant());
-        return char.ToLowerInvariant(text[0]) + text[1..];
+        return char.ToUpperInvariant(text[0]) + text[1..];
     }
 
     [GeneratedRegex("([_\\-])(?<char>[a-z])", RegexOptions.IgnoreCase, "zh-CN")]
