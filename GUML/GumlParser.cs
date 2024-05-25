@@ -4,7 +4,7 @@ public class GumlParserException(string msg, IPosInfo posInfo) : Exception($"{ms
 
 public class GumlParser
 {
-    private static readonly string[] SKeywords = ["each", "using", "import", "import_top", "resource", "vec"];
+    private static readonly string[] SKeywords = ["each", "using", "import", "import_top", "resource", "vec2"];
 
     private static readonly string[] SOperators = ["!=", "<=", ">=", "==", "!", "||", "&&", "+", "-", "*", "/", "%", "^"];
 
@@ -547,7 +547,7 @@ public class GumlParser
                 valueNode.ValueType = GumlValueType.Vector2;
                 valueNode = ParseResource(valueNode);
                 break;
-            case "vec":
+            case "vec2":
                 valueNode.ValueType = GumlValueType.Vector2;
                 valueNode = ParseVector2(valueNode);
                 break;
