@@ -41,7 +41,7 @@ public static class Guml
     public static GuiController LoadGuml(Node root, string path)
     {
         var importPath = Path.GetDirectoryName(Path.GetFullPath(path)) ?? throw new InvalidOperationException();
-        var controllerName = $"{Path.GetFileNameWithoutExtension(path)}Controller";
+        var controllerName = $"{KeyConverter.ToPascalCase(Path.GetFileNameWithoutExtension(path))}Controller";
         var controller = Activator.CreateInstance(FindType(controllerName)) as GuiController ?? throw new InvalidOperationException();
         GumlRenderer.Render(Parser.Parse(File.ReadAllText(path)), controller, root, importPath);
         return controller;
@@ -54,7 +54,7 @@ public static class Guml
             return type;
         }
 
-        throw new Exception();
+        throw new TypeNotFoundException(name);
     }
 
 }
