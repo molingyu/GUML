@@ -19,7 +19,6 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <RootNamespace>GUML</RootNamespace>
-    <OutputType>Module</OutputType>
   </PropertyGroup>
   <ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="\" />
