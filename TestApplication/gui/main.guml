@@ -1,0 +1,13 @@
+Control {
+    Label {
+        position: vec2(12, 12),
+        size: vec2(200, 20),
+        text: "hello world"
+    }
+    
+    Button {
+        position: vec2(12, 12),
+        size: vec2(200, 20),
+        #pressed: "ExitGamePressed"
+    }
+}
