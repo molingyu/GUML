@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using Godot;
 
 namespace GUML;
 
@@ -71,6 +72,7 @@ public class TokenizeGenerator(List<(Func<string, ITokenize, string>, Func<IToke
         _line = 1;
         _column = 0;
         Index = 0;
+        _cacheIndex = 0;
         while (Index < CodeString.Length)
         {
             var patternString = "";
