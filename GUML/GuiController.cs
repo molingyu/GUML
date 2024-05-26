@@ -18,7 +18,7 @@ public abstract class GuiController : INotifyPropertyChanged
 
     public virtual void Dispose()
     {
-        
+        RootNode.GetParent().RemoveChild(RootNode);
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
