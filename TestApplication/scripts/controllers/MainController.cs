@@ -1,3 +1,4 @@
+using Godot;
 using GUML;
 
 public class Actor
@@ -10,7 +11,7 @@ public class Actor
 
 public class MainController : GuiController
 {
-	public SettingController SettingController;
+	public SettingController SettingController { get; set; }
 	
 	public NotifyList<Actor> Actors =
 	[
