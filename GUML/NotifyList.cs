@@ -1,8 +1,8 @@
 ﻿namespace GUML;
 
-public class NotifyList<T> : List<T>, INotifyListChanged<T>
+public class NotifyList<T> : List<T>, INotifyListChanged
 {
-    public event ListChangedEventHandler<T>? ListChanged;
+    public event ListChangedEventHandler? ListChanged;
 
     public new void Add(T item)
     {
