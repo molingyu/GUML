@@ -4,7 +4,7 @@ public class GumlParserException(string msg, IPosInfo posInfo) : Exception($"{ms
 
 public class GumlParser
 {
-    private static readonly string[] SKeywords = ["each", "using", "import", "import_top", "resource", "vec2"];
+    private static readonly string[] SKeywords = ["each", "import", "import_top", "resource", "vec2"];
 
     private static readonly string[] SOperators = ["!=", "<=", ">=", "==", "!", "||", "&&", "+", "-", "*", "/", "%", "^"];
 
@@ -119,6 +119,7 @@ public class GumlParser
         Code = code;
         _index = 0;
         _tokenIdCache = 0;
+        _tokenCache = null;
         _nodeStack = new Stack<GumlSyntaxNode>();
         _tokens = _tokenizer.Tokenize(Code);
         _gumlDoc = new GumlDoc();
@@ -162,7 +163,7 @@ public class GumlParser
     private void ParseImport()
     {
         if (CurrentToken().Name != "import" && CurrentToken().Name != "import_top") return;
-        while (CurrentToken().Name == "import" ||  CurrentToken().Name != "import_top")
+        while (CurrentToken().Name == "import" ||  CurrentToken().Name == "import_top")
         {
             var isTop = CurrentToken().Name == "import_top";
             ThrowEofException();
@@ -295,9 +296,7 @@ public class GumlParser
             Line = CurrentToken().Line,
             Column = CurrentToken().Column
         });
-        NextToken("using");
-        var controllerType = NextToken("component").Value;
-        NextToken("{");
+        CurrentToken("{");
         NextToken("|");
         var indexName = NextToken("name").Value;
         NextToken(",");
@@ -309,7 +308,6 @@ public class GumlParser
             Line = startToken.Line,
             Column = startToken.Column,
             DataSource = dataSource,
-            ControllerType = controllerType,
             IndexName = indexName,
             ValueName = valueName,
             Name = "each"
