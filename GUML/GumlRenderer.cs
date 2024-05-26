@@ -1,3 +1,4 @@
+using System.Collections;
 using System.ComponentModel;
 using Godot;
 
@@ -16,7 +17,7 @@ public static class GumlRenderer
         ReinitializeRender();
         _sGumlDoc = gumlDoc;
         _sController = controller;
-        Guml.GlobalRefs.Add("$controller", _sController);
+        Guml.GlobalRefs["$controller"] = _sController;
         var component = CreateComponent(_sGumlDoc.RootNode);
         _sController.RootNode = component;
         RenderImports(controller, rootNode, component, dir);
@@ -40,9 +41,19 @@ public static class GumlRenderer
     private static void SetObjProperty<T>(object obj, string key, T value)
     {
         var propertyInfo = obj.GetType().GetProperty(key);
+        
         if (propertyInfo != null)
         {
-            propertyInfo.SetValue(obj, value);
+            var propertyType = propertyInfo.PropertyType;
+            if (propertyType == typeof(string))
+            {
+                propertyInfo.SetValue(obj, value?.ToString());
+            }
+            else
+            {
+                propertyInfo.SetValue(obj, value);
+            }
+            
         }
         else
         {
@@ -111,39 +122,35 @@ public static class GumlRenderer
         #region EachNode
         node.EachNodes.ForEach(eachNode =>
         {
-            var dataSource = (NotifyList<object>)ExprEval(eachNode.DataSource)!;
+            var dataSource = (IList)ExprEval(eachNode.DataSource)!;
             _sLocalStack.Push(new Dictionary<string, object>());
-            var eachController = FindComponent(eachNode.ControllerType);
             var index = 0;
             foreach (var obj in dataSource)
             {
-                var eachItemController = new Control();
-                _sLocalStack.Peek().Add(eachNode.IndexName, index);
-                _sLocalStack.Peek().Add(eachNode.ValueName, obj);
+                _sLocalStack.Peek()[eachNode.IndexName] = index;
+                _sLocalStack.Peek()[eachNode.ValueName] = obj;
                 eachNode.Children.ForEach(child =>
                 {
-                    eachItemController.AddChild(CreateComponent(child));
+                    var c = CreateComponent(child);
+                    guiNode.AddChild(c);
                 });
                 index += 1;
-                eachController.AddChild(eachItemController);
             }
-            guiNode.AddChild(eachController);
 
-            dataSource.ListChanged += (_, remove, obj) =>
+            var notifyList = (INotifyListChanged)dataSource;
+            notifyList.ListChanged += (_, remove, obj) =>
             {
                 if (remove)
-                    eachController.RemoveChild(eachController.GetChildren()[dataSource.IndexOf(obj)]);
+                    guiNode.RemoveChild(guiNode.GetChildren()[dataSource.IndexOf(obj)]);
                 else
                 {
                     _sLocalStack.Push(new Dictionary<string, object>());
-                    var eachItemController = new Control();
                     _sLocalStack.Peek().Add(eachNode.IndexName, dataSource.Count - 1);
                     _sLocalStack.Peek().Add(eachNode.ValueName, obj);
                     eachNode.Children.ForEach(child =>
                     {
-                        eachItemController.AddChild(CreateComponent(child));
+                        guiNode.AddChild(CreateComponent(child));
                     });
-                    eachController.AddChild(eachItemController);
                     _sLocalStack.Pop();
                 }
             };
