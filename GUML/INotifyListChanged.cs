@@ -1,8 +1,8 @@
 ﻿namespace GUML;
 
-public delegate void ListChangedEventHandler<in T>(object? sender, bool isRemove, T obj);
+public delegate void ListChangedEventHandler(object? sender, bool isRemove, object obj);
 
-public interface INotifyListChanged<out T>
+public interface INotifyListChanged
 {
-    public event ListChangedEventHandler<T> ListChanged;
+    public event ListChangedEventHandler ListChanged;
 }
