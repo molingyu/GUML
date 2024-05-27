@@ -1,4 +1,3 @@
-using Godot;
 using GUML;
 
 public class Actor
