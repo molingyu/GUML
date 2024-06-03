@@ -563,7 +563,6 @@ public class GumlParser
         return valueNode;
     }
     
-    // TODO error
     private GumlOpNode ComputePriority(GumlOpNode oldOp, GumlOpNode newOp)
     {
         var currentOp = oldOp;
@@ -577,10 +576,14 @@ public class GumlParser
         }
         var temp = currentOp.Right;
         currentOp.Right = newOp;
-        if (newOp is not InfixOpNode newInfixOp) return newOp;
-        if (temp != null) newInfixOp.Left = temp;
+        if (newOp is InfixOpNode newInfixOp)
+        {
+            newInfixOp.Left = temp;
+        }
         else
-        if (temp != null) newOp.Right = temp;
+        {
+            newOp.Right = temp;
+        }
         return newOp;
     }
 
