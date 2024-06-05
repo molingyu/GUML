@@ -4,7 +4,7 @@ public class GumlParserException(string msg, IPosInfo posInfo) : Exception($"{ms
 
 public class GumlParser
 {
-    private static readonly string[] SKeywords = ["each", "import", "import_top", "resource", "vec2"];
+    private static readonly string[] SKeywords = ["each", "import", "import_top", "resource", "vec2", "color"];
 
     private static readonly string[] SOperators = ["!=", "<=", ">=", "==", "!", "||", "&&", "+", "-", "*", "/", "%", "^"];
 
@@ -518,6 +518,24 @@ public class GumlParser
         NextToken();
         return valueNode;
     }
+    
+    private GumlValueNode ParseColor(GumlValueNode valueNode)
+    {
+        NextToken("(");
+        valueNode.ColorRNode = ParseValue();
+        CurrentToken(",");
+        NextToken();
+        valueNode.ColorGNode = ParseValue();
+        CurrentToken(",");
+        NextToken();
+        valueNode.ColorBNode = ParseValue();
+        CurrentToken(",");
+        NextToken();
+        valueNode.ColorANode = ParseValue();
+        CurrentToken(")");
+        NextToken();
+        return valueNode;
+    }
     private GumlValueNode GetRmlValueNode(Token current, GumlValueNode valueNode)
     {
         switch (current.Name)
@@ -548,6 +566,10 @@ public class GumlParser
             case "vec2":
                 valueNode.ValueType = GumlValueType.Vector2;
                 valueNode = ParseVector2(valueNode);
+                break;
+            case "color":
+                valueNode.ValueType = GumlValueType.Color;
+                valueNode = ParseColor(valueNode);
                 break;
             case "{":
                 valueNode.ValueType = GumlValueType.Object;

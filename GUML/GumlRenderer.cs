@@ -518,6 +518,12 @@ public static class GumlRenderer
                     float xFloat when yValue is float yFloat => new Vector2(xFloat, yFloat),
                     _ => new Exception("Vector2 value node type error.")
                 };
+            case GumlValueType.Color:
+                var rValue = (float)(ExprEval(valueNode.ColorRNode!) ?? throw new InvalidOperationException());
+                var gValue = (float)(ExprEval(valueNode.ColorGNode!) ?? throw new InvalidOperationException());
+                var bValue = (float)(ExprEval(valueNode.ColorBNode!) ?? throw new InvalidOperationException());
+                var aValue = (float)(ExprEval(valueNode.ColorANode!) ?? throw new InvalidOperationException());
+                return new Color(rValue, gValue, bValue, aValue);
             case GumlValueType.Ref:
                 return GetRefValue(valueNode, bindKey);
             case GumlValueType.Resource:

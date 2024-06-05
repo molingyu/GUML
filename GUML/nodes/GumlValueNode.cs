@@ -7,6 +7,7 @@ public enum GumlValueType
     Float,
     Boolean,
     Vector2,
+    Color,
     Object,
     Resource,
     Ref,
@@ -37,7 +38,10 @@ public class GumlValueNode : GumlExprNode
     public GumlExprNode? ResourceNode { get; set; }
     public GumlExprNode? Vector2XNode { get; set; }
     public GumlExprNode? Vector2YNode { get; set; }
-
+    public GumlExprNode? ColorRNode { get; set; }
+    public GumlExprNode? ColorGNode { get; set; }
+    public GumlExprNode? ColorBNode { get; set; }
+    public GumlExprNode? ColorANode { get; set; }
     public override void Add(GumlExprNode node, bool isLeft = false) =>
         throw new GumlParserException("Node type is value node.", this);
 }
