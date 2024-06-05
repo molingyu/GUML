@@ -74,7 +74,8 @@ public static class GumlRenderer
 
         if (_sGumlDoc.LocalAlias.ContainsValue(node))
         {
-            _sController?.NamedNode.Add(GetKeyByValue(_sGumlDoc.LocalAlias, node), guiNode);
+            var name = GetKeyByValue(_sGumlDoc.LocalAlias, node);
+            _sController?.NamedNode.Add(name.Substring(1, name.Length - 1), guiNode);
         }
 
         #region Properties
@@ -82,38 +83,49 @@ public static class GumlRenderer
         object? value;
         node.Properties.Keys.ToList().ForEach(propertyName =>
         {
-            var bingType = node.Properties[propertyName].Item1;
-            var propertyNode = node.Properties[propertyName].Item2;
-            if (bingType)
+            if (propertyName == "ThemeOverrides")
             {
-                var cacheKey = $"{guiNode.GetHashCode()}_{propertyName}";
-                SBindingExprCache.Add(cacheKey, propertyNode);
-                _sBindObj = guiNode;
-                value = ExprEval(propertyNode, cacheKey);
+                value = ExprEval(node.Properties[propertyName].Item2);
+                if (value is not Dictionary<string, object> objValue) throw new Exception("");
+                foreach (var keyValuePair in objValue)
+                {
+                    SetThemeOverride(guiNode, KeyConverter.FromCamelCase(keyValuePair.Key), keyValuePair.Value);
+                }
             }
             else
             {
-                value = ExprEval(propertyNode);
-                _sBindObj = null;
-            }
-            if (value is Dictionary<string, object> objValue)
-            {
-                var propertyInfo = type.GetProperty(propertyName);
-                if (propertyInfo?.GetValue(guiNode) == null)
+                var bingType = node.Properties[propertyName].Item1;
+                var propertyNode = node.Properties[propertyName].Item2;
+                if (bingType)
                 {
-                    SetObjProperty(guiNode, propertyName, Activator.CreateInstance(propertyInfo!.GetType()));
+                    var cacheKey = $"{guiNode.GetHashCode()}_{propertyName}";
+                    SBindingExprCache.Add(cacheKey, propertyNode);
+                    _sBindObj = guiNode;
+                    value = ExprEval(propertyNode, cacheKey);
                 }
-                var obj = propertyInfo.GetValue(guiNode);
-                if (obj != null)
+                else
                 {
-                    foreach (var keyValuePair in objValue)
+                    value = ExprEval(propertyNode);
+                    _sBindObj = null;
+                }
+                if (value is Dictionary<string, object> objValue)
+                {
+                    var propertyInfo = type.GetProperty(propertyName);
+                    if (propertyInfo?.GetValue(guiNode) == null)
                     {
-                        SetObjProperty(obj, keyValuePair.Key, keyValuePair.Value);
+                        SetObjProperty(guiNode, propertyName, Activator.CreateInstance(propertyInfo!.GetType()));
+                    }
+                    var obj = propertyInfo.GetValue(guiNode);
+                    if (obj != null)
+                    {
+                        foreach (var keyValuePair in objValue)
+                        {
+                            SetObjProperty(obj, keyValuePair.Key, keyValuePair.Value);
+                        }
                     }
                 }
+                SetObjProperty(guiNode, propertyName, value);
             }
-            SetObjProperty(guiNode, propertyName, value);
-
         });
         #endregion
 
@@ -131,8 +143,7 @@ public static class GumlRenderer
                 _sLocalStack.Peek()[eachNode.ValueName] = obj;
                 eachNode.Children.ForEach(child =>
                 {
-                    var c = CreateComponent(child);
-                    guiNode.AddChild(c);
+                    guiNode.AddChild(CreateComponent(child));
                 });
                 index += 1;
             }
@@ -183,6 +194,39 @@ public static class GumlRenderer
         }
         #endregion
         return guiNode;
+    }
+    
+    private static void SetThemeOverride(Control obj, string key, object value)
+    {
+        var guiNodeName = obj.GetType().ToString().Split(".")[^1];
+        if (Guml.ThemeOverrides.ContainsKey(guiNodeName))
+        {
+            if (Guml.ThemeOverrides[guiNodeName].ContainsKey(key))
+            {
+                var type = Guml.ThemeOverrides[guiNodeName][key];
+                switch (type)
+                {
+                    case ThemeValueType.Color:
+                        obj.AddThemeColorOverride(key, (Color)value);
+                        break;
+                    case ThemeValueType.Constant:
+                        obj.AddThemeConstantOverride(key, (int)value);
+                        break;
+                    case ThemeValueType.Font:
+                        obj.AddThemeFontOverride(key, (FontFile)value);
+                        break;
+                    case ThemeValueType.FontSize:
+                        obj.AddThemeFontSizeOverride(key, (int)value);
+                        break;
+                    case ThemeValueType.Icon:
+                        obj.AddThemeIconOverride(key, (ImageTexture)value);
+                        break;
+                    case ThemeValueType.Style:
+                        obj.AddThemeStyleboxOverride(key, (StyleBox)value);
+                        break;
+                }
+            }
+        }
     }
 
     private static Control FindComponent(string name)
