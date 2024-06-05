@@ -11,18 +11,19 @@ Panel {
         size: vec2(200, 30),
         #pressed: "ExitGamePressed"
     }
-    VBoxContainer {
+    @vbox: VBoxContainer {
         position: vec2(400, 100),
+        theme_overrides: { separation: 0 },
         each $controller.Actors { |index, actor|
             Control {
-                custom_minimum_size: vec2(220, 100),
+                custom_minimum_size: vec2(220, 60),
                 Label {
-                    position: vec2(10, 10),
+                    position: vec2(10, 0),
                     size: vec2(200, 30),
                     text: actor.Name
                 }
                 Label {
-                    position: vec2(10, 50),
+                    position: vec2(10, 30),
                     size: vec2(200, 30),
                     text: actor.Level
                 }
