@@ -1,37 +1,20 @@
-import_top "setting"
 Panel {
     size: vec2(640, 480),
-    theme_overrides: { panel: style_box_flat({
-        bg_color: color(0.8, 1.0, 0.8, 1.0)
-    }) },
+    theme_overrides: { 
+        panel: style_box_flat({
+            bg_color: color(0.4, 0.4, 0.4, 0.4)
+        })
+    },
     Label {
-        position: vec2(12, 10),
+        position: vec2(10, 10),
         size: vec2(200, 30),
-        text: "hello world"
-    }
-    Button {
-        position: vec2(12, 50),
-        size: vec2(200, 30),
-        #pressed: "ExitGamePressed"
-    }
-    @vbox: VBoxContainer {
-        position: vec2(400, 100),
-        theme_overrides: { separation: 0 },
-        each $controller.Actors { |index, actor|
-            Control {
-                custom_minimum_size: vec2(220, 60),
-                Label {
-                    position: vec2(10, 0),
-                    size: vec2(200, 30),
-                    text: actor.Name
-                }
-                Label {
-                    position: vec2(10, 30),
-                    size: vec2(200, 30),
-                    text: actor.Level
-                }
-            }
-        }
+        text:= "hello " + $controller.SayHello
     }
     
+    Button {
+        position: vec2(10, 50),
+        size: vec2(200, 30),
+        text: "Change world",
+        #pressed: "ChangeHelloBtnPressed"
+    }
 }
