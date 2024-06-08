@@ -86,7 +86,7 @@ public static class GumlRenderer
             if (propertyName == "ThemeOverrides")
             {
                 value = ExprEval(node.Properties[propertyName].Item2);
-                if (value is not Dictionary<string, object> objValue) throw new Exception("");
+                if (value is not Dictionary<string, object> objValue) throw new Exception("The ThemeOverrides type error.");
                 foreach (var keyValuePair in objValue)
                 {
                     SetThemeOverride(guiNode, KeyConverter.FromCamelCase(keyValuePair.Key), keyValuePair.Value);
@@ -569,14 +569,14 @@ public static class GumlRenderer
         {
             return value;
         }
-        throw new Exception();
+        throw new Exception($"Global ref '{valueNode.RefName}' not find.");
     }
 
     private static Control GetLocalAliasRefValue(GumlValueNode valueNode)
     {
         if (!_sController!.NamedNode.TryGetValue(valueNode.RefName, out var value))
         {
-            throw new Exception();
+            throw new Exception($"Local alias ref '{valueNode.RefName}' not find.");
         }
         return value;
     }
@@ -585,7 +585,7 @@ public static class GumlRenderer
     {
         if (!_sLocalStack.Peek().ContainsKey(valueNode.RefName))
         {
-            throw new Exception();
+            throw new Exception($"Local ref '{valueNode.RefName}' not find.");
         }
 
         return _sLocalStack.Peek()[valueNode.RefName];
@@ -594,7 +594,7 @@ public static class GumlRenderer
     private static object? GetPropertyRefValue(GumlValueNode valueNode, string bindKey)
     {
         var refValue = GetRefValue(valueNode.RefNode!, bindKey);
-        if (refValue == null) throw new Exception();
+        if (refValue == null) throw new Exception($"Property '{valueNode.RefName}' not find on '{valueNode}'.");
         var refType = refValue.GetType();
         var propertyInfo = refType.GetProperty(valueNode.RefName);
         
