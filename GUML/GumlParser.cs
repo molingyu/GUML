@@ -1,5 +1,3 @@
-using Godot;
-
 namespace GUML;
 
 public class GumlParserException(string msg, IPosInfo posInfo) : Exception($"{msg}(at {posInfo.Line}:{posInfo.Column})");
