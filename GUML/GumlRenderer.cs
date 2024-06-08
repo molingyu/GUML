@@ -410,6 +410,7 @@ public static class GumlRenderer
                             int intAddLeft when right is float floatAddRight => intAddLeft + floatAddRight,
                             float floatAddLeft when right is int intAddRight => floatAddLeft + intAddRight,
                             float floatAddLeft when right is float floatAddRight => floatAddLeft + floatAddRight,
+                            string stringLeft when right is string stringRight => stringLeft + stringRight,
                             _ => throw new TypeErrorException($"Both ends of expression must be of type int or float.")
                         };
                     case "-":
@@ -612,10 +613,11 @@ public static class GumlRenderer
 
         if (bindKey != "" && refValue is INotifyPropertyChanged notifyObj)
         {
+            var bindObj = _sBindObj;
             notifyObj.PropertyChanged += (_, _) =>
             {
                 var propertyName = bindKey.Split("_")[1];
-                _sBindObj?.GetType().GetProperty(propertyName)?.SetValue(_sBindObj,ExprEval(SBindingExprCache[bindKey]));
+                bindObj?.GetType().GetProperty(propertyName)?.SetValue(bindObj,ExprEval(SBindingExprCache[bindKey]));
             };
         }
         return propertyInfo.GetValue(refValue);
