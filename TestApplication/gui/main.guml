@@ -1,6 +1,9 @@
 import_top "setting"
 Panel {
     size: vec2(640, 480),
+    theme_overrides: { panel: style_box_flat({
+        bg_color: color(0.8, 1.0, 0.8, 1.0)
+    }) },
     Label {
         position: vec2(12, 10),
         size: vec2(200, 30),

@@ -8,6 +8,7 @@ public enum GumlValueType
     Boolean,
     Vector2,
     Color,
+    StyleBox,
     Object,
     Resource,
     Ref,
@@ -21,6 +22,14 @@ public enum RefType
     LocalAliasRef,
     LocalRef,
     PropertyRef
+}
+
+public enum StyleNodeType
+{
+    Empty,
+    Flat,
+    Line,
+    Texture
 }
 
 public class GumlValueNode : GumlExprNode
@@ -42,6 +51,9 @@ public class GumlValueNode : GumlExprNode
     public GumlExprNode? ColorGNode { get; set; }
     public GumlExprNode? ColorBNode { get; set; }
     public GumlExprNode? ColorANode { get; set; }
+    public StyleNodeType? StyleNodeType { get; set; }
+    public GumlExprNode? StyleNode { get; set; }
+    
     public override void Add(GumlExprNode node, bool isLeft = false) =>
         throw new GumlParserException("Node type is value node.", this);
 }

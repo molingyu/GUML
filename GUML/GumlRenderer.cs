@@ -524,6 +524,20 @@ public static class GumlRenderer
                 var bValue = (float)(ExprEval(valueNode.ColorBNode!) ?? throw new InvalidOperationException());
                 var aValue = (float)(ExprEval(valueNode.ColorANode!) ?? throw new InvalidOperationException());
                 return new Color(rValue, gValue, bValue, aValue);
+            case GumlValueType.StyleBox:
+                if (valueNode.StyleNodeType == StyleNodeType.Empty) return new StyleBoxEmpty();
+                StyleBox obj = valueNode.StyleNodeType switch
+                {
+                    StyleNodeType.Flat => new StyleBoxFlat(),
+                    StyleNodeType.Line => new StyleBoxLine(),
+                    StyleNodeType.Texture => new StyleBoxTexture(),
+                };
+                var styleDictionary = (Dictionary<string, object>)ExprEval(valueNode.StyleNode!)!;
+                foreach (var gumlExprNode in styleDictionary)
+                {
+                    SetObjProperty(obj, gumlExprNode.Key, gumlExprNode.Value);
+                }
+                return obj;
             case GumlValueType.Ref:
                 return GetRefValue(valueNode, bindKey);
             case GumlValueType.Resource:

@@ -1,10 +1,13 @@
+using Godot;
+
 namespace GUML;
 
 public class GumlParserException(string msg, IPosInfo posInfo) : Exception($"{msg}(at {posInfo.Line}:{posInfo.Column})");
 
 public class GumlParser
 {
-    private static readonly string[] SKeywords = ["each", "import", "import_top", "resource", "vec2", "color"];
+    private static readonly string[] SKeywords = ["each", "import", "import_top", "resource", "vec2", "color", 
+        "style_box_empty", "style_box_flat", "style_box_line", "style_box_texture"];
 
     private static readonly string[] SOperators = ["!=", "<=", ">=", "==", "!", "||", "&&", "+", "-", "*", "/", "%", "^"];
 
@@ -296,7 +299,7 @@ public class GumlParser
             Line = CurrentToken().Line,
             Column = CurrentToken().Column
         });
-        CurrentToken("{");
+        NextToken("{");
         NextToken("|");
         var indexName = NextToken("name").Value;
         NextToken(",");
@@ -381,7 +384,6 @@ public class GumlParser
                     lastIsValue = false;
                     break;
                 default:
-                    // if (lastIsValue) throw UnexpectedException(CurrentToken());
                     var valueNode = new GumlValueNode
                     {
                         Start = current.Start, End = current.End, Line = current.Line, Column = current.Column
@@ -392,9 +394,8 @@ public class GumlParser
                     lastIsValue = true;
                     break;
             }
+            NextToken();
             if (CurrentToken().Name == "}") break;
-            if (CurrentToken().Name != ",") NextToken();
-            if (CurrentToken().Name == "}")  break;
         }
         LoopEnd:
         var value = GetRoot(opNodeStack.Pop()!);
@@ -449,10 +450,9 @@ public class GumlParser
     private GumlValueNode ParseRef(GumlValueNode valueNode)
     {
         var currentNode = valueNode;
-        while (_ref.Contains(CurrentToken().Name) || CurrentToken().Name == ".")
+        while (_ref.Contains(CurrentToken().Name))
         {
             ThrowEofException();
-
             switch (CurrentToken().Name)
             {
                 case "global_ref":
@@ -482,9 +482,11 @@ public class GumlParser
                     };
                     break;
             }
+
             NextToken();
-            if (CurrentToken().Name == "}")  break;
         }
+
+        _index -= 1;
         return currentNode;
     }
 
@@ -495,7 +497,6 @@ public class GumlParser
         valueNode.ObjectValue = new Dictionary<string, GumlExprNode>();
         ParseKeyValuePair(valueNode);
         CurrentToken("}");
-        NextToken();
         return valueNode;
     }
 
@@ -504,7 +505,6 @@ public class GumlParser
         NextToken("(");
         valueNode.ResourceNode = ParseValue();
         CurrentToken(")");
-        NextToken();
         return valueNode;
     }
     private GumlValueNode ParseVector2(GumlValueNode valueNode)
@@ -515,7 +515,6 @@ public class GumlParser
         NextToken();
         valueNode.Vector2YNode = ParseValue();
         CurrentToken(")");
-        NextToken();
         return valueNode;
     }
     
@@ -533,7 +532,15 @@ public class GumlParser
         NextToken();
         valueNode.ColorANode = ParseValue();
         CurrentToken(")");
-        NextToken();
+        return valueNode;
+    }
+    
+    private GumlValueNode ParseStyleBox(StyleNodeType styleNodeType, GumlValueNode valueNode)
+    {
+        valueNode.StyleNodeType = styleNodeType;
+        NextToken("(");
+        if (styleNodeType != StyleNodeType.Empty) valueNode.StyleNode = ParseValue();
+        CurrentToken(")");
         return valueNode;
     }
     private GumlValueNode GetRmlValueNode(Token current, GumlValueNode valueNode)
@@ -570,6 +577,22 @@ public class GumlParser
             case "color":
                 valueNode.ValueType = GumlValueType.Color;
                 valueNode = ParseColor(valueNode);
+                break;
+            case "style_box_empty":
+                valueNode.ValueType = GumlValueType.StyleBox;
+                valueNode = ParseStyleBox(StyleNodeType.Empty, valueNode);
+                break;
+            case "style_box_flat":
+                valueNode.ValueType = GumlValueType.StyleBox;
+                valueNode = ParseStyleBox(StyleNodeType.Flat, valueNode);
+                break;
+            case "style_box_line":
+                valueNode.ValueType = GumlValueType.StyleBox;
+                valueNode = ParseStyleBox(StyleNodeType.Line, valueNode);
+                break;
+            case "style_box_texture":
+                valueNode.ValueType = GumlValueType.StyleBox;
+                valueNode = ParseStyleBox(StyleNodeType.Texture, valueNode);
                 break;
             case "{":
                 valueNode.ValueType = GumlValueType.Object;
