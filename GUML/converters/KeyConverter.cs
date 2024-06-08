@@ -13,7 +13,7 @@ public partial class KeyConverter : IConverter
             return ToPascalCase(keyName);
         }
 
-        throw new Exception("");
+        throw new Exception("KeyConverter source type error.");
     }
     
     public static string FromCamelCase(string str)
