@@ -727,7 +727,8 @@ public static class Guml
     /// 
     /// </summary>
     public static Func<string, object> ResourceLoader;
-    
+
+    public static List<string> ControllerNamespaces = [""];
     public static readonly List<Assembly> Assemblies = [];
     public static readonly Dictionary<string, object> GlobalRefs = new ();
     
@@ -759,10 +760,12 @@ public static class Guml
 
     public static Type FindType(string name)
     {
-        foreach (var type in Assemblies.Select(assembly => assembly.GetType(name)).OfType<Type>())
+        foreach (var type in ControllerNamespaces.SelectMany(@namespace => 
+                     Assemblies.Select(assembly => assembly.GetType($"{@namespace}.{name}")).OfType<Type>()))
         {
             return type;
         }
+
 
         throw new TypeNotFoundException(name);
     }
