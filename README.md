@@ -2,13 +2,20 @@
 [![GitHub Release](https://img.shields.io/github/v/release/molingyu/guml)](https://github.com/molingyu/guml/releases/latest) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/molingyu/guml/blob/main/LICENSE)
 
 
-GUML is used to quickly create a responsive Godot UI that supports data binding from text at runtime.Designed for MOD systems.
+GUML is used to quickly create responsive Godot UI, supporting creation from text at runtime. Designed specifically for MOD systems.
 
 ## Feature
 - QML-like syntax
 - Support responsive binding of data to GUI
 - Full Godot UI component support
 - Support for theme overrides
+
+## Install
+
+use nuget:
+```
+dotnet add package GUML --version 0.0.2
+```
 
 ## Document
 - [Quick Start](Doc/quick_start.md)
