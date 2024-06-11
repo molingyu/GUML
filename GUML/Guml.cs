@@ -755,6 +755,7 @@ public static class Guml
         var controllerName = $"{KeyConverter.ToPascalCase(Path.GetFileNameWithoutExtension(path))}Controller";
         var controller = Activator.CreateInstance(FindType(controllerName)) as GuiController ?? throw new InvalidOperationException();
         GumlRenderer.Render(Parser.Parse(File.ReadAllText(path)), controller, root, importPath);
+        controller.Created();
         return controller;
     }
 

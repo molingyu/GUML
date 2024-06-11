@@ -8,9 +8,14 @@ public abstract class GuiController : INotifyPropertyChanged
 {
     public readonly Dictionary<string, Control> NamedNode = new ();
 
-    public Control RootNode;
+    public Control RootNode = null!;
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public virtual void Created()
+    {
+        
+    }
+    
     public virtual void Update()
     {
         
