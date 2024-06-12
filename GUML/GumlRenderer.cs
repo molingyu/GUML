@@ -19,8 +19,9 @@ public static class GumlRenderer
         _sController = controller;
         Guml.GlobalRefs["$controller"] = _sController;
         var component = CreateComponent(_sGumlDoc.RootNode);
-        _sController.RootNode = component;
+        _sController.GumlRootNode = component;
         RenderImports(controller, rootNode, component, dir);
+        if (Guml.DefaultTheme != null) component.Theme = Guml.DefaultTheme;
         rootNode.AddChild(component);
     }
 

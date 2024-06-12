@@ -8,7 +8,7 @@ public abstract class GuiController : INotifyPropertyChanged
 {
     public readonly Dictionary<string, Control> NamedNode = new ();
 
-    public Control RootNode = null!;
+    public Control GumlRootNode = null!;
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public virtual void Created()
@@ -23,7 +23,7 @@ public abstract class GuiController : INotifyPropertyChanged
 
     public virtual void Dispose()
     {
-        RootNode.GetParent().RemoveChild(RootNode);
+        GumlRootNode.GetParent().RemoveChild(GumlRootNode);
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
