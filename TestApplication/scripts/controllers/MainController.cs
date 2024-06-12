@@ -14,6 +14,11 @@ public class MainController : GuiController
 
     private string _sayHello = "world!";
 
+    public override void Created()
+    {
+        
+    }
+
     public void ChangeHelloBtnPressed()
     {
         SayHello = "new world!";
