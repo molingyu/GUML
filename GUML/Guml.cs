@@ -728,6 +728,7 @@ public static class Guml
     /// </summary>
     public static Func<string, object> ResourceLoader;
 
+    public static Theme? DefaultTheme = null;
     public static List<string> ControllerNamespaces = [""];
     public static readonly List<Assembly> Assemblies = [];
     public static readonly Dictionary<string, object> GlobalRefs = new ();
