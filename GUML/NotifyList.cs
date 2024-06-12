@@ -7,7 +7,7 @@ public class NotifyList<T> : List<T>, INotifyListChanged
     public new void Add(T item)
     {
         base.Add(item);
-        ListChanged?.Invoke(this, false, item);
+        ListChanged?.Invoke(this, false, item!);
     }
 
     public new void AddRange(IEnumerable<T> collection)
@@ -16,14 +16,14 @@ public class NotifyList<T> : List<T>, INotifyListChanged
         base.AddRange(enumerable);
         foreach (var item in enumerable)
         {
-            ListChanged?.Invoke(this, false, item);
+            ListChanged?.Invoke(this, false, item!);
         }
     }
 
     public new void Remove(T item)
     {
         base.Remove(item);
-        ListChanged?.Invoke(this, true, item);
+        ListChanged?.Invoke(this, true, item!);
     }
 
     public new void RemoveRange(int start, int count)
@@ -31,13 +31,13 @@ public class NotifyList<T> : List<T>, INotifyListChanged
         base.RemoveRange(start, count);
         for (var index = start; index < start + count; index++)
         {
-            ListChanged?.Invoke(this, false, this[index]);
+            ListChanged?.Invoke(this, false, this[index]!);
         }
     }
 
     public new void Clear()
     {
         base.Clear();
-        ForEach(removeObj => ListChanged?.Invoke(this, true, removeObj));
+        ForEach(removeObj => ListChanged?.Invoke(this, true, removeObj!));
     }
 }
