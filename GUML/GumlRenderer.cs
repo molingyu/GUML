@@ -150,20 +150,23 @@ public static class GumlRenderer
             }
 
             var notifyList = (INotifyListChanged)dataSource;
+            var localStack = new Stack<Dictionary<string, object>>(_sLocalStack);
+            var controller = _sController;
             notifyList.ListChanged += (_, remove, obj) =>
             {
                 if (remove)
                     guiNode.RemoveChild(guiNode.GetChildren()[dataSource.IndexOf(obj)]);
                 else
                 {
-                    _sLocalStack.Push(new Dictionary<string, object>());
-                    _sLocalStack.Peek().Add(eachNode.IndexName, dataSource.Count - 1);
-                    _sLocalStack.Peek().Add(eachNode.ValueName, obj);
+                    localStack.Peek()[eachNode.IndexName] = dataSource.Count - 1;
+                    localStack.Peek()[eachNode.ValueName] = obj;
+                    _sLocalStack = localStack;
+                    _sController = controller;
                     eachNode.Children.ForEach(child =>
                     {
                         guiNode.AddChild(CreateComponent(child));
                     });
-                    _sLocalStack.Pop();
+                    ReinitializeRender();
                 }
             };
             _sLocalStack.Pop();
