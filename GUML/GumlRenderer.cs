@@ -150,7 +150,7 @@ public static class GumlRenderer
             }
 
             var notifyList = (INotifyListChanged)dataSource;
-            var localStack = new Stack<Dictionary<string, object>>(_sLocalStack);
+            var localStack = CopyEnv(_sLocalStack);
             var controller = _sController;
             notifyList.ListChanged += (_, remove, obj) =>
             {
@@ -408,13 +408,16 @@ public static class GumlRenderer
                         }
                         throw new TypeErrorException($"Both ends of expression must be of type int or float.");
                     case "+":
+                        if (left is string || right is string)
+                        {
+                            return $"{left}{right}";
+                        }
                         return left switch
                         {
                             int intAddLeft when right is int intAddRight => intAddLeft + intAddRight,
                             int intAddLeft when right is float floatAddRight => intAddLeft + floatAddRight,
                             float floatAddLeft when right is int intAddRight => floatAddLeft + intAddRight,
                             float floatAddLeft when right is float floatAddRight => floatAddLeft + floatAddRight,
-                            string stringLeft when right is string stringRight => stringLeft + stringRight,
                             _ => throw new TypeErrorException($"Both ends of expression must be of type int or float.")
                         };
                     case "-":
@@ -630,6 +633,16 @@ public static class GumlRenderer
 
     }
 
+    private static Stack<Dictionary<string, object>> CopyEnv(Stack<Dictionary<string, object>> source)
+    {
+        var result = new Stack<Dictionary<string, object>>();
+        foreach (var dictionary in source)
+        {
+            result.Push(new Dictionary<string, object>(dictionary));
+        }
+        return result;
+    }
+    
     private static TKey GetKeyByValue<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TValue value) where TKey : notnull =>
         // 使用 LINQ 查询字典中第一个值匹配的键
         dictionary.FirstOrDefault(x => EqualityComparer<TValue>.Default.Equals(x.Value, value)).Key;
