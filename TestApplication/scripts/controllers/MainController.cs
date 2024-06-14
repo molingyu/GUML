@@ -1,8 +1,8 @@
-using Godot;
 using GUML;
 
 public class MainController : GuiController
 {
+    public SettingController SettingController { get; set; }
     public string SayHello {
         get => _sayHello;
         set

@@ -1,7 +1,34 @@
 Control {
+    size: vec2(200, 480),
+    position: vec2(680, 10),
     Label {
-        position: vec2(120, 10),
         size: vec2(200, 30),
         text: "hello setting!"
     }
+    
+    each $controller.YPos { |yIndex, yValue|
+        Control {
+            each $controller.XPos { |xIndex, xValue|
+                Label {
+                    size: vec2($controller.ListWidth, 30),
+                    position: vec2(xValue, yValue),
+                    text: "x index: " + xIndex + ", y index: " + yIndex
+                }
+            }
+        }
+    }
+    
+    Button {
+        size: vec2(100, 30),
+        position: vec2(20, 400),
+        text: "Add X",
+        #pressed: "AddXPressed"
+    }
+    
+        Button {
+            size: vec2(100, 30),
+            position: vec2(140, 400),
+            text: "Add Y",
+            #pressed: "AddYPressed"
+        }
 }
