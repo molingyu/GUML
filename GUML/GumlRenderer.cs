@@ -588,12 +588,14 @@ public static class GumlRenderer
 
     private static object GetLocalRefValue(GumlValueNode valueNode)
     {
-        if (!_sLocalStack.Peek().ContainsKey(valueNode.RefName))
+        foreach (var dict in _sLocalStack)
         {
-            throw new Exception($"Local ref '{valueNode.RefName}' not find.");
+            if (dict.TryGetValue(valueNode.RefName, out var value))
+            {
+                return value;
+            }
         }
-
-        return _sLocalStack.Peek()[valueNode.RefName];
+        throw new Exception($"Local ref '{valueNode.RefName}' not find.");
     }
 
     private static object? GetPropertyRefValue(GumlValueNode valueNode, string bindKey)
