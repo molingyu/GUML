@@ -213,7 +213,7 @@ public class TokenizeGenerator(List<(Func<string, ITokenize, string>, Func<IToke
 
             return commentStr.ToString();
         };
-
+    
     public static Func<ITokenize, string> StringPattern() =>
         tokenize =>
         {
@@ -225,35 +225,63 @@ public class TokenizeGenerator(List<(Func<string, ITokenize, string>, Func<IToke
                 return "";
             }
 
-            var isEscape = false;
+            bool isEscape = false;
             var currentChar = tokenize.Next();
             while (currentChar != null)
             {
-                if (currentChar == '\\')
+                if (isEscape)
                 {
-                    isEscape = !isEscape;
+                    // 处理转义字符
+                    switch (currentChar)
+                    {
+                        case '\\':
+                            result.Append('\\');
+                            break;
+                        case 'n':
+                            result.Append('\n');
+                            break;
+                        case 't':
+                            result.Append('\t');
+                            break;
+                        case '\'':
+                            result.Append('\'');
+                            break;
+                        case '"':
+                            result.Append('"');
+                            break;
+                        default:
+                            result.Append(currentChar);
+                            break;
+                    }
+                    isEscape = false;
                 }
-
-                // 如果遇到结束的 ' 或 "
-                if (currentChar == quoteChar && !isEscape)
+                else if (currentChar == '\\')
                 {
+                    isEscape = true;
+                }
+                else if (currentChar == quoteChar)
+                {
+                    // 如果遇到结束的 ' 或 "
                     return result.ToString();
                 }
-
-                // 如果遇到换行，则字符串未闭合
-                if (currentChar == '\n')
+                else if (currentChar == '\n')
                 {
+                    // 如果遇到换行，则字符串未闭合
                     return "";
                 }
+                else
+                {
+                    result.Append(currentChar);
+                }
 
-                result.Append(currentChar);
                 currentChar = tokenize.Next();
             }
 
-            return result.ToString();
+            // 如果字符串未闭合
+            return "";
         };
 
-    public static Func<ITokenize, string> NumberPattern(bool hasDecimal = false, bool hasScientificNotation = false) =>
+    public static Func<ITokenize, string> NumberPattern(bool hasDecimal = false) =>
         tokenize =>
         {
             var result = "";
