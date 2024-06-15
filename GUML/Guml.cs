@@ -724,19 +724,32 @@ public static class Guml
     /// </summary>
     public static readonly Dictionary<string, GuiController> TopControllers = new ();
     /// <summary>
-    /// 
+    /// Resource Loader 
     /// </summary>
     public static Func<string, object> ResourceLoader;
-
+    /// <summary>
+    /// The default theme.
+    /// </summary>
     public static Theme? DefaultTheme = null;
+    /// <summary>
+    /// GUML Controller namespace list.
+    /// </summary>
     public static List<string> ControllerNamespaces = [""];
+    /// <summary>
+    /// GUML Controller Assembly list.
+    /// </summary>
     public static readonly List<Assembly> Assemblies = [];
+    /// <summary>
+    /// GUML Global variable dictionary
+    /// </summary>
     public static readonly Dictionary<string, object> GlobalRefs = new ();
-    
+    /// <summary>
+    /// GUML Parser
+    /// </summary>
     public static readonly GumlParser Parser = new ();
 
     /// <summary>
-    /// 
+    /// Initializes the static members of Guml.
     /// </summary>
     public static void Init()
     {
