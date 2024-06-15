@@ -1,4 +1,4 @@
-import "setting"
+import "panel/setting"
 
 Panel {
     size: vec2(640, 480),
@@ -7,7 +7,7 @@ Panel {
             bg_color: color(0.4, 0.4, 0.4, 0.4)
         })
     },
-    Label {
+    @hello: Label {
         position: vec2(10, 10),
         size: vec2(200, 30),
         text:= "hello " + $controller.SayHello
@@ -16,7 +16,7 @@ Panel {
     Button {
         position: vec2(10, 50),
         size: vec2(200, 30),
-        text: "Change world",
+        text: "Change world(" + @hello.Text + ")",
         #pressed: "ChangeHelloBtnPressed"
     }
 }
