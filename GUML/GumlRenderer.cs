@@ -582,7 +582,8 @@ public static class GumlRenderer
 
     private static Control GetLocalAliasRefValue(GumlValueNode valueNode)
     {
-        if (!_sController!.NamedNode.TryGetValue(valueNode.RefName, out var value))
+        if (!_sController!.NamedNode.TryGetValue(valueNode.RefName.Substring(1, valueNode.RefName.Length - 1), out 
+            var value))
         {
             throw new Exception($"Local alias ref '{valueNode.RefName}' not find.");
         }

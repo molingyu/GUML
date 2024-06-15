@@ -10,6 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="gui\main.guml" />
-    <Content Include="gui\setting.guml" />
+    <Content Include="gui\panel\setting.guml" />
   </ItemGroup>
 </Project>
