@@ -1,16 +1,23 @@
-using System.Collections;
 using System.ComponentModel;
 using Godot;
 
 namespace GUML;
 
+public struct BindingExprEnv
+{
+    public string PropertyName;
+    public GumlExprNode Source;
+    public Control BindObj;
+    public bool IsDefine;
+    public Dictionary<string, object> GlobalRefs;
+    public Dictionary<string, (INotifyListChanged, int)> LocalRefs;
+}
+
 public static class GumlRenderer
 {
-    private static readonly Dictionary<string, GumlExprNode> SBindingExprCache = new();
     private static GumlDoc _sGumlDoc;
     private static GuiController? _sController;
-    private static Control? _sBindObj;
-    private static Stack<Dictionary<string, object>> _sLocalStack = new ();
+    private static Stack<Dictionary<string, object?>> _sLocalStack = new ();
 
     public static void Render(GumlDoc gumlDoc, GuiController controller, Node rootNode, string dir)
     {
@@ -66,7 +73,7 @@ public static class GumlRenderer
     private static void ReinitializeRender()
     {
         _sController = null;
-        _sLocalStack = new Stack<Dictionary<string, object>>();
+        _sLocalStack = new Stack<Dictionary<string, object?>>();
     }
 
     private static Control CreateComponent(GumlSyntaxNode node)
@@ -99,15 +106,21 @@ public static class GumlRenderer
                 var propertyNode = node.Properties[propertyName].Item2;
                 if (bingType)
                 {
-                    var cacheKey = $"{guiNode.GetHashCode()}_{propertyName}";
-                    SBindingExprCache.Add(cacheKey, propertyNode);
-                    _sBindObj = guiNode;
-                    value = ExprEval(propertyNode, cacheKey);
+                    var env = new BindingExprEnv
+                    {
+                        PropertyName = propertyName,
+                        BindObj = guiNode,
+                        IsDefine = true,
+                        GlobalRefs = new Dictionary<string, object>(),
+                        LocalRefs = new Dictionary<string, (INotifyListChanged, int)>(),
+                        Source = propertyNode
+                    };
+                    value = ExprEval(propertyNode, env);
+                    env.IsDefine = false;
                 }
                 else
                 {
                     value = ExprEval(propertyNode);
-                    _sBindObj = null;
                 }
                 if (value is Dictionary<string, object> objValue)
                 {
@@ -135,8 +148,8 @@ public static class GumlRenderer
         #region EachNode
         node.EachNodes.ForEach(eachNode =>
         {
-            var dataSource = (IList)ExprEval(eachNode.DataSource)!;
-            _sLocalStack.Push(new Dictionary<string, object>());
+            var dataSource = (INotifyListChanged)ExprEval(eachNode.DataSource)!;
+            _sLocalStack.Push(new Dictionary<string, object?>());
             var index = 0;
             foreach (var obj in dataSource)
             {
@@ -148,26 +161,46 @@ public static class GumlRenderer
                 });
                 index += 1;
             }
-
-            var notifyList = (INotifyListChanged)dataSource;
+            
             var localStack = CopyEnv(_sLocalStack);
             var controller = _sController;
-            notifyList.ListChanged += (_, remove, obj) =>
+            dataSource.ListChanged += (_, changeType, changeIndex, obj) =>
             {
-                if (remove)
-                    guiNode.RemoveChild(guiNode.GetChildren()[dataSource.IndexOf(obj)]);
-                else
+                switch (changeType)
                 {
-                    localStack.Peek()[eachNode.IndexName] = dataSource.Count - 1;
-                    localStack.Peek()[eachNode.ValueName] = obj;
-                    _sLocalStack = localStack;
-                    _sController = controller;
-                    eachNode.Children.ForEach(child =>
-                    {
-                        guiNode.AddChild(CreateComponent(child));
-                    });
-                    ReinitializeRender();
+                    case ListChangedType.Add:
+                        localStack.Peek()[eachNode.IndexName] = dataSource.Count - 1;
+                        localStack.Peek()[eachNode.ValueName] = obj;
+                        _sLocalStack = localStack;
+                        _sController = controller;
+                        eachNode.Children.ForEach(child =>
+                        {
+                            guiNode.AddChild(CreateComponent(child));
+                        });
+                        ReinitializeRender();
+                        break;
+                    case ListChangedType.Remove:
+                        guiNode.RemoveChild(guiNode.GetChildren()[dataSource.IndexOf(obj)]);
+                        break;
+                    case ListChangedType.Insert:
+                        localStack.Peek()[eachNode.IndexName] = dataSource.Count - 1;
+                        localStack.Peek()[eachNode.ValueName] = obj;
+                        _sLocalStack = localStack;
+                        _sController = controller;
+                        eachNode.Children.ForEach(child =>
+                        {
+                            var childNode = CreateComponent(child);
+                            guiNode.AddChild(childNode);
+                            guiNode.MoveChild(childNode, changeIndex);
+                        });
+                        ReinitializeRender();
+                        break;
                 }
+            };
+            // TODO: error
+            dataSource.ValueChanged += (sender, changeIndex, obj) =>
+            {
+                
             };
             _sLocalStack.Pop();
         });
@@ -247,16 +280,16 @@ public static class GumlRenderer
         throw new TypeNotFoundException($"GUI Node of type {name} not found!");
     }
 
-    private static object? ExprEval(GumlExprNode exprNode, string bindKey = "")
+    private static object? ExprEval(GumlExprNode exprNode, BindingExprEnv? env = null)
     {
         switch (exprNode)
         {
             case GumlValueNode valueNode:
-                return GetValue(valueNode, bindKey);
+                return GetValue(valueNode, env);
             case InfixOpNode infixOpNode:
             {
-                var left = ExprEval(infixOpNode.Left, bindKey);
-                var right = ExprEval(infixOpNode.Right, bindKey);
+                var left = ExprEval(infixOpNode.Left, env);
+                var right = ExprEval(infixOpNode.Right, env);
                 switch (infixOpNode.Op)
                 {
                     case "||":
@@ -462,7 +495,7 @@ public static class GumlRenderer
             }
             case PrefixOpNode prefixOpNode:
             {
-                var right = ExprEval(prefixOpNode.Right, bindKey);
+                var right = ExprEval(prefixOpNode.Right, env);
                 switch (prefixOpNode.Op)
                 {
                     case "!":
@@ -494,7 +527,7 @@ public static class GumlRenderer
         return null;
     }
 
-    private static object? GetValue(GumlValueNode valueNode, string bindKey)
+    private static object? GetValue(GumlValueNode valueNode, BindingExprEnv? env)
     {
         switch (valueNode.ValueType)
         {
@@ -510,7 +543,7 @@ public static class GumlRenderer
                 Dictionary<string, object?> result = new ();
                 foreach (var key in valueNode.ObjectValue!.Keys)
                 {
-                    result[key] = ExprEval(valueNode.ObjectValue[key], bindKey);
+                    result[key] = ExprEval(valueNode.ObjectValue[key], env);
                 }
                 return result;
             case GumlValueType.Null:
@@ -539,6 +572,8 @@ public static class GumlRenderer
                     StyleNodeType.Flat => new StyleBoxFlat(),
                     StyleNodeType.Line => new StyleBoxLine(),
                     StyleNodeType.Texture => new StyleBoxTexture(),
+                    StyleNodeType.Empty => new StyleBoxEmpty(),
+                    _ => throw new ArgumentOutOfRangeException()
                 };
                 var styleDictionary = (Dictionary<string, object>)ExprEval(valueNode.StyleNode!)!;
                 foreach (var gumlExprNode in styleDictionary)
@@ -547,7 +582,7 @@ public static class GumlRenderer
                 }
                 return obj;
             case GumlValueType.Ref:
-                return GetRefValue(valueNode, bindKey);
+                return GetRefValue(valueNode, env);
             case GumlValueType.Resource:
                 var resourcePath = ExprEval(valueNode.ResourceNode!);
                 if (resourcePath is string resourcePathStr)
@@ -559,21 +594,40 @@ public static class GumlRenderer
         return null;
     }
 
-    private static object? GetRefValue(GumlValueNode valueNode, string bindKey)
+    private static object? GetRefValue(GumlValueNode valueNode, BindingExprEnv? env)
     {
         return valueNode.RefType switch
         {
-            RefType.GlobalRef => GetGlobalRefValue(valueNode),
+            RefType.GlobalRef => GetGlobalRefValue(valueNode, env),
             RefType.LocalAliasRef => GetLocalAliasRefValue(valueNode),
-            RefType.LocalRef => GetLocalRefValue(valueNode),
-            RefType.PropertyRef => GetPropertyRefValue(valueNode, bindKey),
+            RefType.LocalRef => GetLocalRefValue(valueNode, env),
+            RefType.PropertyRef => GetPropertyRefValue(valueNode, env),
             _ => throw new ArgumentOutOfRangeException(nameof(valueNode))
         };
     }
 
-    private static object GetGlobalRefValue(GumlValueNode valueNode)
+    private static object GetGlobalRefValue(GumlValueNode valueNode, BindingExprEnv? env)
     {
-        if (Guml.GlobalRefs.TryGetValue(valueNode.RefName, out var value))
+        var source = Guml.GlobalRefs;
+        if (env != null)
+        {
+            if (env.Value.IsDefine)
+            {
+                if (source.TryGetValue(valueNode.RefName, out var refValue))
+                {
+                    env.Value.GlobalRefs.Add(valueNode.RefName, refValue);
+                }
+                else
+                {
+                    throw new Exception($"Global ref '{valueNode.RefName}' not find.");
+                }
+            }
+            else
+            {
+                source = env.Value.GlobalRefs;
+            }
+        }
+        if (source.TryGetValue(valueNode.RefName, out var value))
         {
             return value;
         }
@@ -590,8 +644,22 @@ public static class GumlRenderer
         return value;
     }
 
-    private static object GetLocalRefValue(GumlValueNode valueNode)
+    private static object? GetLocalRefValue(GumlValueNode valueNode, BindingExprEnv? env)
     {
+        if (env != null)
+        {
+            if (!env.Value.IsDefine)
+            {
+                if (env.Value.LocalRefs.TryGetValue(valueNode.RefName, out var value))
+                {
+                    if (value.Item1.Count - 1 > value.Item2)
+                    {
+                        return value.Item1[value.Item2]!;
+                    }
+                    throw new Exception();
+                }
+            }
+        }
         foreach (var dict in _sLocalStack)
         {
             if (dict.TryGetValue(valueNode.RefName, out var value))
@@ -599,12 +667,13 @@ public static class GumlRenderer
                 return value;
             }
         }
+        
         throw new Exception($"Local ref '{valueNode.RefName}' not find.");
     }
 
-    private static object? GetPropertyRefValue(GumlValueNode valueNode, string bindKey)
+    private static object? GetPropertyRefValue(GumlValueNode valueNode, BindingExprEnv? env)
     {
-        var refValue = GetRefValue(valueNode.RefNode!, bindKey);
+        var refValue = GetRefValue(valueNode.RefNode!, env);
         if (refValue == null) throw new Exception($"Property '{valueNode.RefName}' not find on '{valueNode}'.");
         var refType = refValue.GetType();
         var propertyInfo = refType.GetProperty(valueNode.RefName);
@@ -621,25 +690,25 @@ public static class GumlRenderer
 
         } 
 
-        if (bindKey != "" && refValue is INotifyPropertyChanged notifyObj)
+        if (env != null && env.Value.IsDefine && refValue is INotifyPropertyChanged notifyObj)
         {
-            var bindObj = _sBindObj;
+            var bindObj = env.Value.BindObj;
             notifyObj.PropertyChanged += (_, _) =>
             {
-                var propertyName = bindKey.Split("_")[1];
-                bindObj?.GetType().GetProperty(propertyName)?.SetValue(bindObj,ExprEval(SBindingExprCache[bindKey]));
+                var propertyName = env.Value.PropertyName;
+                bindObj.GetType().GetProperty(propertyName)?.SetValue(bindObj,ExprEval(env.Value.Source, env));
             };
         }
         return propertyInfo.GetValue(refValue);
 
     }
 
-    private static Stack<Dictionary<string, object>> CopyEnv(Stack<Dictionary<string, object>> source)
+    private static Stack<Dictionary<string, object?>> CopyEnv(Stack<Dictionary<string, object?>> source)
     {
-        var result = new Stack<Dictionary<string, object>>();
+        var result = new Stack<Dictionary<string, object?>>();
         foreach (var dictionary in source)
         {
-            result.Push(new Dictionary<string, object>(dictionary));
+            result.Push(new Dictionary<string, object?>(dictionary));
         }
         return result;
     }
