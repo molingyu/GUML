@@ -23,7 +23,8 @@ public static class GumlRenderer
     {
         ReinitializeRender();
         _sGumlDoc = gumlDoc;
-        _sController = controller;
+        _sController = _sGumlDoc.Redirect != null ? Activator.CreateInstance(Guml.FindType(_sGumlDoc.Redirect )) as 
+            GuiController ?? throw new InvalidOperationException() : controller;
         Guml.GlobalRefs["$controller"] = _sController;
         var component = CreateComponent(_sGumlDoc.RootNode);
         _sController.GumlRootNode = component;

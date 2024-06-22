@@ -4,7 +4,7 @@ public class GumlParserException(string msg, IPosInfo posInfo) : Exception($"{ms
 
 public class GumlParser
 {
-    private static readonly string[] SKeywords = ["each", "import", "import_top", "resource", "vec2", "color", 
+    private static readonly string[] SKeywords = ["each", "import", "import_top", "redirect", "resource", "vec2", "color", 
         "style_box_empty", "style_box_flat", "style_box_line", "style_box_texture"];
 
     private static readonly string[] SOperators = ["!=", "<=", ">=", "==", "!", "||", "&&", "+", "-", "*", "/", "%", "^"];
@@ -125,6 +125,7 @@ public class GumlParser
         _tokens = _tokenizer.Tokenize(Code);
         _gumlDoc = new GumlDoc();
         ParseImport();
+        ParseRedirect();
         if (CurrentToken().Name == "eof") throw new GumlParserException("Must has root component.", CurrentToken());
         ParseComponent();
         return _gumlDoc;
@@ -176,6 +177,17 @@ public class GumlParser
             NextToken();
         }
     }
+
+    private void ParseRedirect()
+    {
+        if (CurrentToken().Name != "redirect") return;
+        NextToken();
+        if (CurrentToken().Name != "string") throw UnexpectedException(CurrentToken());
+        var redirect = CurrentToken().Value;
+        _gumlDoc.Redirect = redirect;
+        NextToken();
+    }
+    
     private void ParseComponent(GumlSyntaxNode? parent = null)
     {
         var aliasName = "";
