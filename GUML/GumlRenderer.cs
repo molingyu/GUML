@@ -41,6 +41,14 @@ public static class GumlRenderer
         {
             var importPath = $"{gumlDocImport.Key}.guml";
             var controllerName = $"{KeyConverter.ToPascalCase(Path.GetFileNameWithoutExtension(importPath))}Controller";
+            if (gumlDocImport.Value)
+            {
+                if (Guml.TopControllers.TryGetValue(gumlDocImport.Key, out var topController))
+                {
+                    SetObjProperty(controller, controllerName, topController);
+                    continue;
+                }
+            }
             var importController = Guml.LoadGuml(gumlDocImport.Value ? rootNode : currentNode, importPath);
             if (gumlDocImport.Value) Guml.TopControllers.Add(controllerName, importController);
             SetObjProperty(controller, controllerName, importController);
