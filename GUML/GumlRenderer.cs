@@ -187,20 +187,17 @@ public static class GumlRenderer
                         localStack.Peek()[eachNode.ValueName] = obj;
                         _sLocalStack = localStack;
                         _sController = controller;
+                        var insertIndex = 0;
                         eachNode.Children.ForEach(child =>
                         {
                             var childNode = CreateComponent(child);
                             guiNode.AddChild(childNode);
-                            guiNode.MoveChild(childNode, changeIndex);
+                            guiNode.MoveChild(childNode, changeIndex + insertIndex);
+                            insertIndex += 1;
                         });
                         ReinitializeRender();
                         break;
                 }
-            };
-            // TODO: error
-            dataSource.ValueChanged += (sender, changeIndex, obj) =>
-            {
-                
             };
             _sLocalStack.Pop();
         });
@@ -217,7 +214,7 @@ public static class GumlRenderer
                 {
                     if (@event.EventHandlerType == null) continue;
                     var signalDelegate = Delegate.CreateDelegate(@event.EventHandlerType, _sController, methodInfo);
-                    @event.GetAddMethod()?.Invoke(guiNode, new object[] { signalDelegate });
+                    @event.GetAddMethod()?.Invoke(guiNode, [signalDelegate]);
                 }
                 else
                 {
@@ -236,12 +233,11 @@ public static class GumlRenderer
     private static void SetThemeOverride(Control obj, string key, object value)
     {
         var guiNodeName = obj.GetType().ToString().Split(".")[^1];
-        if (Guml.ThemeOverrides.ContainsKey(guiNodeName))
+        if (Guml.ThemeOverrides.TryGetValue(guiNodeName, out var themeValue))
         {
-            if (Guml.ThemeOverrides[guiNodeName].ContainsKey(key))
+            if (themeValue.TryGetValue(key, out var themeValueType))
             {
-                var type = Guml.ThemeOverrides[guiNodeName][key];
-                switch (type)
+                switch (themeValueType)
                 {
                     case ThemeValueType.Color:
                         obj.AddThemeColorOverride(key, (Color)value);
