@@ -7,16 +7,36 @@ GUML supports the following variables:
 - Local variable
 
 ### Alias variable
+Alias for ui node. So that the corresponding ui node can be referenced in guml file or corresponding controller.
 
 ### Global variable
+Global variables bound externally via Guml.GlobalRefs . The scope is the entire guml file. Among them, `$controller` always points to the instance of the controller class corresponding to the current guml file.
+
+### Local variable
+Used in `each` node to represent `each` parameter. Its scope is only within the corresponding `each` node.
 
 ## Import Statements
 A GUML document may have one or more imports at the top of the file.
+
 Syntax:
 ```
 import <guml path>
 import_top <guml path>
 ```
+- `guml path` is a string, path to the guml file to load. Can be an absolute path or a relative path to the current 
+  file.
+
+`import` will mount the loaded component under the current node, while `import_top` will mount it on the root node.
+
+## Redirect Statement
+Used to redirect the controller corresponding to the current guml file.
+
+Syntax:
+```
+redirect <redirect controller>
+```
+- `redirect controller` is a string, the type name of the redirected controller.
+
 
 ## Component Declarations
 Syntax:
@@ -35,18 +55,18 @@ Syntax:
 - `method name` is a string whose value corresponds to the method name.
 
 ### Value Type
-- `string`:  
-- `int`: 
-- `float`: 
-- `boolean`: `true` or `false`
+- `string`:  Similar to C#'s `string`.
+- `int`: Similar to C#'s `int`.
+- `float`: Similar to C#'s `float`. Does not support scientific notation.
+- `boolean`: `true` or `false`.
 - `object`: `{ <property name>: <property value> }`
 - `ref`: All variable ref
 - `null`
-- `vector2`: `vec2(x: int, y: int)`
-- `color`: `color(r: float, g: float, b: float, a: float)` 
+- `vector2`: `vec2(x: int, y: int)` used to represent Godot's Vector2.
+- `color`: `color(r: float, g: float, b: float, a: float)` used to represent Godot's Color.
 - `styleBox`: `style_box_empty()` `style_box_flat(properties: object)` `style_box_line(properties: object)` 
-  `style_box_texture(properties: object)`
-- `resource`: `resource(path: string)`
+  `style_box_texture(properties: object)` used to represent Godot's StyleBox.
+- `resource`: `resource(path: string)` used to represent fonts, images, or audio.
 
 ## Child Components
 Any component declaration can define child components through nested component declarations. In this way, any component 
@@ -111,4 +131,5 @@ import "setting" // This is also allowed
 ## Keywords
 The component's property key cannot conflict with keywords.
 
-`import` `import_top` `each` `resource` `vec2` `color` `style_box_empty` `style_box_flat` `style_box_line` `style_box_texture`
+`import` `import_top` `redirect` `each` `resource` `vec2` `color` `style_box_empty` `style_box_flat` `style_box_line` 
+`style_box_texture`
