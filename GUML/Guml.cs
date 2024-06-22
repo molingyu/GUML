@@ -720,13 +720,13 @@ public static class Guml
     };
     
     /// <summary>
-    /// 
+    /// Top Controller List.
     /// </summary>
     public static readonly Dictionary<string, GuiController> TopControllers = new ();
     /// <summary>
     /// Resource Loader 
     /// </summary>
-    public static Func<string, object> ResourceLoader;
+    public static Func<string, object> ResourceLoader = null!;
     /// <summary>
     /// The default theme.
     /// </summary>
