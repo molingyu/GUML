@@ -10,7 +10,7 @@ public struct BindingExprEnv
     public Control BindObj;
     public bool IsDefine;
     public Dictionary<string, object> GlobalRefs;
-    public Dictionary<string, (INotifyListChanged, int)> LocalRefs;
+    public Dictionary<string, object?> LocalRefs;
 }
 
 public static class GumlRenderer
@@ -18,7 +18,10 @@ public static class GumlRenderer
     private static GumlDoc _sGumlDoc;
     private static GuiController? _sController;
     private static Stack<Dictionary<string, object?>> _sLocalStack = new ();
-
+    private static Stack<INotifyListChanged> _eachSource = new ();
+    private static Stack<int> _eachIndex = new ();
+    private static Stack<string> _eachIndexName = new ();
+    
     public static void Render(GumlDoc gumlDoc, GuiController controller, Node rootNode, string dir)
     {
         ReinitializeRender();
@@ -83,6 +86,9 @@ public static class GumlRenderer
     {
         _sController = null;
         _sLocalStack = new Stack<Dictionary<string, object?>>();
+        _eachSource = new Stack<INotifyListChanged>();
+        _eachIndex = new Stack<int>();
+        _eachIndexName = new Stack<string>();
     }
 
     private static Control CreateComponent(GumlSyntaxNode node)
@@ -121,7 +127,7 @@ public static class GumlRenderer
                         BindObj = guiNode,
                         IsDefine = true,
                         GlobalRefs = new Dictionary<string, object>(),
-                        LocalRefs = new Dictionary<string, (INotifyListChanged, int)>(),
+                        LocalRefs = new Dictionary<string, object?>(),
                         Source = propertyNode
                     };
                     value = ExprEval(propertyNode, env);
@@ -164,13 +170,18 @@ public static class GumlRenderer
             {
                 _sLocalStack.Peek()[eachNode.IndexName] = index;
                 _sLocalStack.Peek()[eachNode.ValueName] = obj;
+                _eachSource.Push(dataSource);
+                _eachIndex.Push(index);
+                _eachIndexName.Push(eachNode.IndexName);
                 eachNode.Children.ForEach(child =>
                 {
                     guiNode.AddChild(CreateComponent(child));
                 });
                 index += 1;
             }
-            
+            _eachSource.Pop();
+            _eachIndex.Pop();
+            _eachIndexName.Pop();
             var localStack = CopyEnv(_sLocalStack);
             var controller = _sController;
             dataSource.ListChanged += (_, changeType, changeIndex, obj) =>
@@ -653,16 +664,24 @@ public static class GumlRenderer
     {
         if (env != null)
         {
-            if (!env.Value.IsDefine)
+            if (env.Value.IsDefine)
+            {
+                if (valueNode.RefName == _eachIndexName.Peek())
+                {
+                    env.Value.LocalRefs.Add(valueNode.RefName,  _eachIndex.Peek());
+                }
+                else
+                {
+                    env.Value.LocalRefs.Add(valueNode.RefName, _eachSource.Peek()[_eachIndex.Peek()]);
+                }
+            }
+            else
             {
                 if (env.Value.LocalRefs.TryGetValue(valueNode.RefName, out var value))
                 {
-                    if (value.Item1.Count - 1 > value.Item2)
-                    {
-                        return value.Item1[value.Item2]!;
-                    }
-                    throw new Exception();
+                    return value;
                 }
+                throw new Exception($"Local ref '{valueNode.RefName}' not find.");
             }
         }
         foreach (var dict in _sLocalStack)
