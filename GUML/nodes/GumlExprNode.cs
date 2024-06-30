@@ -13,7 +13,7 @@ public abstract class GumlExprNode : IPosInfo
 public abstract class GumlOpNode : GumlExprNode
 {
     public bool FirstPrecedence { get; set; }
-    public required string Op { get; init; }
+    public string Op { get; init; }
     private GumlExprNode _right = null!;
     public GumlExprNode Right
     {
