@@ -21,19 +21,13 @@ public partial class KeyConverter : IConverter
         // 确保首字母始终为小写
         str = char.ToLower(str[0]) + str.Substring(1);
 
-        str = FromCamelRegex().Replace(str, match => '_' + match.Groups["char"].Value.ToLowerInvariant());
+        str = new Regex("(?<char>[A-Z])").Replace(str, match => '_' + match.Groups["char"].Value.ToLowerInvariant());
         return str;
     }
     
     public static string ToPascalCase(string str)
     {
-        var text = ToPascalRegex().Replace(str, match => match.Groups["char"].Value.ToUpperInvariant());
+        var text = new Regex("([_\\-])(?<char>[a-z])").Replace(str, match => match.Groups["char"].Value.ToUpperInvariant());
         return char.ToUpperInvariant(text[0]) + text[1..];
     }
-
-    [GeneratedRegex("([_\\-])(?<char>[a-z])")]
-    private static partial Regex ToPascalRegex();
-    
-    [GeneratedRegex("(?<char>[A-Z])")]
-    private static partial Regex FromCamelRegex();
 }

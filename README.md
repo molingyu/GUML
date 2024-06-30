@@ -14,7 +14,7 @@ GUML is used to quickly create responsive Godot UI, supporting creation from tex
 
 use nuget:
 ```
-dotnet add package GUML --version 0.0.3
+dotnet add package GUML --version 0.0.4
 ```
 
 ## Document
